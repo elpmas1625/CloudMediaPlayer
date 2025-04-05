@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/tab_item.dart';
+import '../widgets/now_playing_bar.dart';
 import 'music_player_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -21,7 +22,12 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentTab],
+      body: Column(
+        children: [
+          Expanded(child: _screens[_currentTab]!),
+          if (_currentTab != TabItem.home) const NowPlayingBar(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentTab.index,
         items:
