@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/music_player_service.dart';
+import 'services/playlist_service.dart';
 import 'ui/screens/main_screen.dart';
 
 void main() {
@@ -12,8 +13,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => MusicPlayerService(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => MusicPlayerService()),
+        ChangeNotifierProvider(create: (_) => PlaylistService()),
+      ],
       child: MaterialApp(
         title: 'Music Player App',
         theme: ThemeData(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/tab_item.dart';
 import '../widgets/now_playing_bar.dart';
 import 'music_player_screen.dart';
+import 'playlist_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -15,7 +16,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final Map<TabItem, Widget> _screens = {
     TabItem.home: const MusicPlayerScreen(),
-    TabItem.playlist: const Center(child: Text('プレイリスト')),
+    TabItem.playlist: const PlaylistScreen(),
     TabItem.settings: const Center(child: Text('設定')),
   };
 

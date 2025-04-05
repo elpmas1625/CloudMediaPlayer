@@ -4,7 +4,6 @@ import '../models/music_track.dart';
 import '../models/player_state.dart';
 import './audio_player_adapter.dart';
 
-
 /// 音楽プレーヤーのビジネスロジックとステート管理を行うサービス
 class MusicPlayerService extends ChangeNotifier {
   final AudioPlayerAdapter _audioAdapter;
@@ -140,6 +139,26 @@ class MusicPlayerService extends ChangeNotifier {
     _repeatMode = mode;
     await _audioAdapter.setLoopMode(mode);
     notifyListeners();
+  }
+
+  MusicTrack? getTrackById(String id) {
+    // トラックの取得ロジックを実装
+    // この部分は実際のデータ管理方法に応じて実装してください
+    return null;
+  }
+
+  Future<void> playPlaylist(List<String> trackIds) async {
+    if (trackIds.isEmpty) return;
+
+    // 最初の曲を設定
+    final firstTrack = getTrackById(trackIds[0]);
+    if (firstTrack == null) return;
+
+    await setTrack(firstTrack);
+    play();
+
+    // 再生キューに残りの曲を追加
+    // この機能はオーディオプレーヤーの実装に依存します
   }
 
   @override
