@@ -29,17 +29,6 @@ class MusicControls extends StatelessWidget {
                   }
                   : null,
         ),
-
-        // 停止ボタン
-        IconButton(
-          icon: const Icon(Icons.stop, size: 48),
-          onPressed:
-              service.hasTrack
-                  ? () {
-                    service.stop();
-                  }
-                  : null,
-        ),
       ],
     );
   }
