@@ -12,7 +12,11 @@ class AudioPlayerAdapter {
   Stream<Duration?> get durationStream => _player.durationStream;
 
   Future<void> setUrl(String url) async {
-    await _player.setUrl(url);
+    if (url.startsWith('assets/')) {
+      await _player.setAsset(url);
+    } else {
+      await _player.setUrl(url);
+    }
   }
 
   Future<void> play() async {
