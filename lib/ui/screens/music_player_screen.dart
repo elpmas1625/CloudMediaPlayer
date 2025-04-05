@@ -5,6 +5,7 @@ import '../../services/music_player_service.dart';
 import '../dialogs/music_file_picker_dialog.dart';
 import '../widgets/music_controls.dart';
 import '../widgets/progress_bar.dart';
+import '../screens/settings_screen.dart';
 
 class MusicPlayerScreen extends StatelessWidget {
   const MusicPlayerScreen({Key? key}) : super(key: key);
@@ -14,7 +15,20 @@ class MusicPlayerScreen extends StatelessWidget {
     final service = Provider.of<MusicPlayerService>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Music Player')),
+      appBar: AppBar(
+        title: const Text('Music Player'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(

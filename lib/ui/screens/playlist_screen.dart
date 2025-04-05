@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/playlist_service.dart';
 import 'playlist_detail_screen.dart';
+import 'settings_screen.dart';
 
 class PlaylistScreen extends StatelessWidget {
   const PlaylistScreen({Key? key}) : super(key: key);
@@ -11,7 +12,22 @@ class PlaylistScreen extends StatelessWidget {
     final service = Provider.of<PlaylistService>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('プレイリスト')),
+      appBar: AppBar(
+        title: const Text('プレイリスト'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body:
           service.playlists.isEmpty
               ? const Center(child: Text('プレイリストがありません'))

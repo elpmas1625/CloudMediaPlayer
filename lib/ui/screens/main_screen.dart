@@ -17,7 +17,6 @@ class _MainScreenState extends State<MainScreen> {
   final Map<TabItem, Widget> _screens = {
     TabItem.home: const MusicPlayerScreen(),
     TabItem.playlist: const PlaylistScreen(),
-    TabItem.settings: const Center(child: Text('設定')),
   };
 
   @override
