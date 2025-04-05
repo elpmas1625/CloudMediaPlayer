@@ -3,6 +3,7 @@ import '../../models/tab_item.dart';
 import '../widgets/now_playing_bar.dart';
 import 'music_player_screen.dart';
 import 'playlist_screen.dart';
+import 'library_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   final Map<TabItem, Widget> _screens = {
     TabItem.home: const MusicPlayerScreen(),
     TabItem.playlist: const PlaylistScreen(),
+    TabItem.library: const LibraryScreen(),
   };
 
   @override
