@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/music_player_service.dart';
-import 'ui/screens/music_player_screen.dart';
+import 'ui/screens/main_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
-        home: const MusicPlayerScreen(),
+        home: const MainScreen(),
       ),
     );
   }
