@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../services/music_player_service.dart';
 import '../../models/tab_item.dart';
 import '../widgets/now_playing_bar.dart';
+import '../widgets/scrolling_text.dart';
 import 'music_player_screen.dart';
 import 'playlist_screen.dart';
 import 'library_screen.dart';
@@ -52,11 +53,10 @@ class _MainScreenState extends State<MainScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          musicService.currentTrack!.title,
+                        ScrollingText(
+                          text: musicService.currentTrack!.title,
                           style: Theme.of(context).textTheme.titleMedium,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          width: MediaQuery.of(context).size.width - 120, // アイコンと再生ボタンのスペースを考慮
                         ),
                         Text(
                           musicService.currentTrack!.artist,
