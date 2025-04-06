@@ -6,6 +6,7 @@ import '../../services/music_player_service.dart';
 import 'package:provider/provider.dart';
 
 import '../../services/playlist_service.dart';
+import '../widgets/music_list_item.dart';
 
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({Key? key}) : super(key: key);
@@ -27,10 +28,13 @@ class MusicFileList extends StatefulWidget {
 }
 
 class _MusicFileListState extends State<MusicFileList> {
+  static const int _pageSize = 50; // 1ページあたりの曲数を50に増加
+  static const int _prefetchThreshold = 500; // プリフェッチのトリガー距離
+
   final ScrollController _scrollController = ScrollController();
-  final List<String> _musicFiles = [];
+  final List<MusicTrack> _displayedTracks = [];
+  final Set<String> _loadedFiles = {}; // 重複ロード防止用
   bool _isLoading = false;
-  static const int _pageSize = 20;
   int _currentPage = 0;
 
   @override
@@ -47,8 +51,9 @@ class _MusicFileListState extends State<MusicFileList> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
+    if (!_isLoading &&
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - _prefetchThreshold) {
       _loadMoreData();
     }
   }
@@ -70,8 +75,21 @@ class _MusicFileListState extends State<MusicFileList> {
               .toList();
 
       final initialFiles = allFiles.take(_pageSize).toList();
+      final newTracks =
+          initialFiles.map((file) {
+            final fileName = file.split('/').last.replaceAll('.mp3', '');
+            return MusicTrack(
+              id: file,
+              title: fileName,
+              artist: 'Unknown',
+              album: 'Local Music',
+              url: file,
+            );
+          }).toList();
+
       setState(() {
-        _musicFiles.addAll(initialFiles);
+        _displayedTracks.addAll(newTracks);
+        _loadedFiles.addAll(initialFiles);
         _currentPage = 1;
       });
     } catch (e) {
@@ -109,8 +127,21 @@ class _MusicFileListState extends State<MusicFileList> {
               : start + _pageSize;
 
       final newFiles = allFiles.sublist(start, end);
+      final newTracks =
+          newFiles.where((file) => !_loadedFiles.contains(file)).map((file) {
+            final fileName = file.split('/').last.replaceAll('.mp3', '');
+            return MusicTrack(
+              id: file,
+              title: fileName,
+              artist: 'Unknown',
+              album: 'Local Music',
+              url: file,
+            );
+          }).toList();
+
       setState(() {
-        _musicFiles.addAll(newFiles);
+        _displayedTracks.addAll(newTracks);
+        _loadedFiles.addAll(newFiles);
         _currentPage++;
       });
     } catch (e) {
@@ -120,40 +151,37 @@ class _MusicFileListState extends State<MusicFileList> {
     }
   }
 
+  void _onTrackTap(MusicTrack track) {
+    final musicService = Provider.of<MusicPlayerService>(
+      context,
+      listen: false,
+    );
+
+    musicService.setTrack(track);
+    musicService.play();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final musicService = Provider.of<MusicPlayerService>(context);
-
     return ListView.builder(
       controller: _scrollController,
-      itemCount: _musicFiles.length + 1,
+      itemCount: _displayedTracks.length + 1,
       itemBuilder: (context, index) {
-        if (index == _musicFiles.length) {
+        if (index == _displayedTracks.length) {
           return _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Center(child: CircularProgressIndicator()),
+              )
               : const SizedBox.shrink();
         }
 
-        final filePath = _musicFiles[index];
-        final fileName = filePath.split('/').last.replaceAll('.mp3', '');
-        final track = MusicTrack(
-          id: filePath, // ファイルパスをIDとして使用
-          title: fileName,
-          artist: 'Unknown',
-          album: 'Local Music',
-          url: filePath,
-        );
-
-        return ListTile(
-          leading: const Icon(Icons.music_note),
-          title: Text(fileName),
-          trailing: IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () => _showOptionsMenu(context, track),
-          ),
-          onTap: () {
-            musicService.setTrack(track);
-          },
+        final track = _displayedTracks[index];
+        return MusicListItem(
+          key: ValueKey(track.id),
+          track: track,
+          onTap: () => _onTrackTap(track),
+          onMenuPressed: () => _showOptionsMenu(context, track),
         );
       },
     );
@@ -222,8 +250,14 @@ class _MusicFileListState extends State<MusicFileList> {
   }
 
   void _showAddToPlaylistDialog(BuildContext context, MusicTrack track) {
-    final playlistService = Provider.of<PlaylistService>(context, listen: false);
-    final musicService = Provider.of<MusicPlayerService>(context, listen: false);
+    final playlistService = Provider.of<PlaylistService>(
+      context,
+      listen: false,
+    );
+    final musicService = Provider.of<MusicPlayerService>(
+      context,
+      listen: false,
+    );
     final playlists = playlistService.playlists;
 
     // トラックを MusicPlayerService に追加
@@ -231,37 +265,40 @@ class _MusicFileListState extends State<MusicFileList> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('プレイリストを選択'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: playlists.length,
-            itemBuilder: (context, index) {
-              final playlist = playlists[index];
-              return ListTile(
-                title: Text(playlist.name),
-                onTap: () {
-                  playlistService.addTrackToPlaylist(playlist.id, track.id);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${track.title}を${playlist.name}に追加しました'),
-                    ),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('プレイリストを選択'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: playlists.length,
+                itemBuilder: (context, index) {
+                  final playlist = playlists[index];
+                  return ListTile(
+                    title: Text(playlist.name),
+                    onTap: () {
+                      playlistService.addTrackToPlaylist(playlist.id, track.id);
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '${track.title}を${playlist.name}に追加しました',
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
-              );
-            },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('キャンセル'),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
-          ),
-        ],
-      ),
     );
   }
 
