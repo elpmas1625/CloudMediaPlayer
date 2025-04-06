@@ -38,7 +38,7 @@ class MusicPlayerScreen extends StatelessWidget {
             Expanded(
               child: Center(
                 child:
-                    service.hasTrack
+                    service.hasCurrentTrack
                         ? _buildTrackInfo(service.currentTrack!)
                         : const Text(
                           '曲が選択されていません',
@@ -48,7 +48,7 @@ class MusicPlayerScreen extends StatelessWidget {
             ),
 
             // プログレスバー
-            if (service.hasTrack) const ProgressBar(),
+            if (service.hasCurrentTrack) const ProgressBar(),
 
             const SizedBox(height: 20),
 
@@ -72,7 +72,7 @@ class MusicPlayerScreen extends StatelessWidget {
               child: const Text('曲を選択'),
             ),
 
-            if (service.hasTrack)
+            if (service.hasCurrentTrack)
               ElevatedButton(
                 onPressed: () {
                   service.clear();

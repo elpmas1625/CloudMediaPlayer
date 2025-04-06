@@ -4,18 +4,24 @@ import 'services/music_player_service.dart';
 import 'services/playlist_service.dart';
 import 'ui/screens/main_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final musicPlayerService = MusicPlayerService();
+  await musicPlayerService.loadMusicFiles();
+
+  runApp(MyApp(musicPlayerService: musicPlayerService));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final MusicPlayerService musicPlayerService;
+
+  const MyApp({Key? key, required this.musicPlayerService}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => MusicPlayerService()),
+        ChangeNotifierProvider.value(value: musicPlayerService),
         ChangeNotifierProvider(create: (_) => PlaylistService()),
       ],
       child: MaterialApp(

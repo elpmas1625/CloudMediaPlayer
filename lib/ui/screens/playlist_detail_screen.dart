@@ -76,13 +76,20 @@ class PlaylistDetailScreen extends StatelessWidget {
                 playlistService.reorderTracks(playlistId, oldIndex, newIndex);
               },
               itemBuilder: (context, index) {
-                final track = musicService.getTrackById(
-                  playlist.trackIds[index],
-                );
-                if (track == null) return const SizedBox.shrink();
+                final trackId = playlist.trackIds[index];
+                print('Building track at index $index with ID: $trackId'); // デバッグ出力
+
+                final track = musicService.getTrackById(trackId);
+                print('Track object: $track'); // より詳細なデバッグ出力
+                print('Available tracks: ${musicService.allTracks.length}'); // 利用可能なトラック数
+
+                if (track == null) {
+                  print('Track is null for ID: $trackId'); // デバッグ出力
+                  return SizedBox.shrink(key: ValueKey('empty-$trackId'));
+                }
 
                 return ListTile(
-                  key: ValueKey(track.id),
+                  key: ValueKey(playlist.trackIds[index]),
                   leading: const Icon(Icons.music_note),
                   title: Text(track.title),
                   subtitle: Text(track.artist),

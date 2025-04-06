@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/playlist.dart';
 
-class PlaylistService extends ChangeNotifier {
+class PlaylistService with ChangeNotifier {
   final List<Playlist> _playlists = [];
 
   List<Playlist> get playlists => List.unmodifiable(_playlists);
@@ -15,31 +15,25 @@ class PlaylistService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addTrackToPlaylist(String playlistId, String trackId) async {
-    final index = _playlists.indexWhere((p) => p.id == playlistId);
-    if (index == -1) return;
-
-    final playlist = _playlists[index];
-    if (playlist.trackIds.contains(trackId)) return;
-
-    _playlists[index] = playlist.copyWith(
-      trackIds: [...playlist.trackIds, trackId],
-    );
-    notifyListeners();
+  // プレイリストに曲を追加
+  void addTrackToPlaylist(String playlistId, String trackId) {
+    final playlist = getPlaylistById(playlistId);
+    if (playlist != null && !playlist.trackIds.contains(trackId)) {
+      playlist.trackIds.add(trackId);
+      notifyListeners();
+      // デバッグ出力
+      print('Added track $trackId to playlist ${playlist.name}');
+      print('Playlist now has ${playlist.trackIds.length} tracks');
+    }
   }
 
-  Future<void> removeTrackFromPlaylist(
-    String playlistId,
-    String trackId,
-  ) async {
-    final index = _playlists.indexWhere((p) => p.id == playlistId);
-    if (index == -1) return;
-
-    final playlist = _playlists[index];
-    _playlists[index] = playlist.copyWith(
-      trackIds: playlist.trackIds.where((id) => id != trackId).toList(),
-    );
-    notifyListeners();
+  // プレイリストから曲を削除
+  void removeTrackFromPlaylist(String playlistId, String trackId) {
+    final playlist = getPlaylistById(playlistId);
+    if (playlist != null) {
+      playlist.trackIds.remove(trackId);
+      notifyListeners();
+    }
   }
 
   Future<void> deletePlaylist(String playlistId) async {
@@ -63,20 +57,13 @@ class PlaylistService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> reorderTracks(
-    String playlistId,
-    int oldIndex,
-    int newIndex,
-  ) async {
+  // プレイリストの曲の順序を変更
+  void reorderTracks(String playlistId, int oldIndex, int newIndex) {
     final playlist = getPlaylistById(playlistId);
-    if (playlist == null) return;
-
-    final tracks = List<String>.from(playlist.trackIds);
-    final item = tracks.removeAt(oldIndex);
-    tracks.insert(newIndex, item);
-
-    final index = _playlists.indexWhere((p) => p.id == playlistId);
-    _playlists[index] = playlist.copyWith(trackIds: tracks);
-    notifyListeners();
+    if (playlist != null) {
+      final track = playlist.trackIds.removeAt(oldIndex);
+      playlist.trackIds.insert(newIndex, track);
+      notifyListeners();
+    }
   }
 }

@@ -10,7 +10,7 @@ class NowPlayingBar extends StatelessWidget {
     final service = Provider.of<MusicPlayerService>(context);
 
     // 再生中の曲がない場合は表示しない
-    if (!service.hasTrack) {
+    if (!service.hasCurrentTrack) {
       return const SizedBox.shrink();
     }
 

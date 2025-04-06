@@ -19,7 +19,7 @@ class MusicControls extends StatelessWidget {
             size: 48,
           ),
           onPressed:
-              service.hasTrack
+              service.hasCurrentTrack
                   ? () {
                     if (service.isPlaying) {
                       service.pause();

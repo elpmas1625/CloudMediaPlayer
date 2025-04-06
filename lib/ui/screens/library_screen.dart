@@ -5,6 +5,8 @@ import '../../models/music_track.dart';
 import '../../services/music_player_service.dart';
 import 'package:provider/provider.dart';
 
+import '../../services/playlist_service.dart';
+
 class LibraryScreen extends StatelessWidget {
   const LibraryScreen({Key? key}) : super(key: key);
 
@@ -134,22 +136,177 @@ class _MusicFileListState extends State<MusicFileList> {
 
         final filePath = _musicFiles[index];
         final fileName = filePath.split('/').last.replaceAll('.mp3', '');
+        final track = MusicTrack(
+          id: filePath, // ファイルパスをIDとして使用
+          title: fileName,
+          artist: 'Unknown',
+          album: 'Local Music',
+          url: filePath,
+        );
 
         return ListTile(
           leading: const Icon(Icons.music_note),
           title: Text(fileName),
+          trailing: IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () => _showOptionsMenu(context, track),
+          ),
           onTap: () {
-            final track = MusicTrack(
-              id: index.toString(),
-              title: fileName,
-              artist: 'Unknown',
-              album: 'Local Music',
-              url: filePath,
-            );
             musicService.setTrack(track);
           },
         );
       },
+    );
+  }
+
+  void _showOptionsMenu(BuildContext context, MusicTrack track) {
+    final musicService = Provider.of<MusicPlayerService>(
+      context,
+      listen: false,
+    );
+    final playlistService = Provider.of<PlaylistService>(
+      context,
+      listen: false,
+    );
+
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.play_arrow),
+                title: const Text('再生'),
+                onTap: () {
+                  musicService.setTrack(track);
+                  musicService.play();
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.playlist_add),
+                title: const Text('プレイリストに追加'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAddToPlaylistDialog(context, track);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.queue_music),
+                title: const Text('次に再生'),
+                onTap: () {
+                  // TODO: 次の曲として追加する機能を実装
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info),
+                title: const Text('ファイル情報'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showFileInfoDialog(context, track);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.share),
+                title: const Text('共有'),
+                onTap: () {
+                  // TODO: 共有機能を実装
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _showAddToPlaylistDialog(BuildContext context, MusicTrack track) {
+    final playlistService = Provider.of<PlaylistService>(context, listen: false);
+    final musicService = Provider.of<MusicPlayerService>(context, listen: false);
+    final playlists = playlistService.playlists;
+
+    // トラックを MusicPlayerService に追加
+    musicService.addTrack(track);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('プレイリストを選択'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: playlists.length,
+            itemBuilder: (context, index) {
+              final playlist = playlists[index];
+              return ListTile(
+                title: Text(playlist.name),
+                onTap: () {
+                  playlistService.addTrackToPlaylist(playlist.id, track.id);
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${track.title}を${playlist.name}に追加しました'),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFileInfoDialog(BuildContext context, MusicTrack track) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('ファイル情報'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoRow('タイトル', track.title),
+                _buildInfoRow('アーティスト', track.artist),
+                _buildInfoRow('アルバム', track.album),
+                _buildInfoRow('ファイルパス', track.url),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('閉じる'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+            ),
+          ),
+          Text(value),
+        ],
+      ),
     );
   }
 }

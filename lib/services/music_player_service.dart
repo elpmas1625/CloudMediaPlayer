@@ -1,11 +1,13 @@
 import 'package:flutter/foundation.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:just_audio/just_audio.dart' show ProcessingState;
 import '../models/music_track.dart';
 import '../models/player_state.dart';
 import './audio_player_adapter.dart';
 
 /// 音楽プレーヤーのビジネスロジックとステート管理を行うサービス
-class MusicPlayerService extends ChangeNotifier {
+class MusicPlayerService with ChangeNotifier {
   final AudioPlayerAdapter _audioAdapter;
 
   // プレーヤーの状態
@@ -16,6 +18,13 @@ class MusicPlayerService extends ChangeNotifier {
   double _volume = 1.0;
   RepeatMode _repeatMode = RepeatMode.off;
 
+  // トラックのマップを保持
+  final Map<String, MusicTrack> _tracks = {};
+  List<String> _musicFiles = [];
+
+  // getter for music files
+  List<String> get musicFiles => _musicFiles;
+
   // ゲッター
   MusicTrack? get currentTrack => _currentTrack;
   PlayerState get playerState => _playerState;
@@ -25,7 +34,8 @@ class MusicPlayerService extends ChangeNotifier {
   RepeatMode get repeatMode => _repeatMode;
 
   // 便利なゲッター
-  bool get hasTrack => _currentTrack != null;
+  bool get hasCurrentTrack =>
+      _currentTrack != null; // hasTrack を hasCurrentTrack に変更
   bool get isPlaying => _playerState == PlayerState.playing;
   bool get isPaused => _playerState == PlayerState.paused;
   bool get isCompleted => _playerState == PlayerState.completed;
@@ -89,6 +99,7 @@ class MusicPlayerService extends ChangeNotifier {
   /// 曲をセットする
   Future<void> setTrack(MusicTrack track) async {
     _currentTrack = track;
+    _tracks[track.id] = track; // トラックをマップに追加
     await _audioAdapter.setUrl(track.url);
     _playerState = PlayerState.paused;
     notifyListeners();
@@ -141,10 +152,54 @@ class MusicPlayerService extends ChangeNotifier {
     notifyListeners();
   }
 
+  // トラックをマップに追加するメソッド
+  void addTrack(MusicTrack track) {
+    _tracks[track.id] = track;
+    notifyListeners();
+  }
+
+  // IDからトラックを取得するメソッド
   MusicTrack? getTrackById(String id) {
-    // トラックの取得ロジックを実装
-    // この部分は実際のデータ管理方法に応じて実装してください
-    return null;
+    return _tracks[id];
+  }
+
+  // すべてのトラックを取得
+  List<MusicTrack> get allTracks => _tracks.values.toList();
+
+  // トラックの存在確認
+  bool hasTrack(String id) {
+    return _tracks.containsKey(id);
+  }
+
+  // 音楽ファイルを読み込むメソッド
+  Future<void> loadMusicFiles() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final files = Directory(directory.path).listSync(recursive: true);
+
+      _musicFiles =
+          files
+              .where((file) => file.path.toLowerCase().endsWith('.mp3'))
+              .map((file) => file.path)
+              .toList();
+
+      // 音楽ファイルからトラックを作成してマップに追加
+      for (var filePath in _musicFiles) {
+        final fileName = filePath.split('/').last.replaceAll('.mp3', '');
+        final track = MusicTrack(
+          id: filePath, // ファイルパスをIDとして使用
+          title: fileName,
+          artist: 'Unknown',
+          album: 'Local Music',
+          url: filePath,
+        );
+        _tracks[track.id] = track;
+      }
+
+      notifyListeners();
+    } catch (e) {
+      print('Error loading music files: $e');
+    }
   }
 
   Future<void> playPlaylist(List<String> trackIds) async {
