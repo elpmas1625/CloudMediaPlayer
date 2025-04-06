@@ -22,6 +22,10 @@ class MusicPlayerService with ChangeNotifier {
   final Map<String, MusicTrack> _tracks = {};
   List<String> _musicFiles = [];
 
+  // プレイリスト再生用の変数を追加
+  List<String> _currentPlaylistTracks = [];
+  int _currentPlaylistIndex = -1;
+
   // getter for music files
   List<String> get musicFiles => _musicFiles;
 
@@ -32,6 +36,12 @@ class MusicPlayerService with ChangeNotifier {
   Duration get duration => _duration;
   double get volume => _volume;
   RepeatMode get repeatMode => _repeatMode;
+
+  // プレイリストの状態を取得するゲッター
+  bool get hasPlaylist => _currentPlaylistTracks.isNotEmpty;
+  int get currentPlaylistIndex => _currentPlaylistIndex;
+  List<String> get currentPlaylistTracks =>
+      List.unmodifiable(_currentPlaylistTracks);
 
   // 便利なゲッター
   bool get hasCurrentTrack =>
@@ -59,6 +69,11 @@ class MusicPlayerService with ChangeNotifier {
 
     _audioAdapter.processingStateStream.listen((processingState) {
       _updateProcessingState(processingState);
+
+      // 曲が完了したら次の曲を再生
+      if (processingState == ProcessingState.completed) {
+        playNextTrack();
+      }
     });
 
     // 再生位置の変化を監視
@@ -202,22 +217,80 @@ class MusicPlayerService with ChangeNotifier {
     }
   }
 
+  // プレイリストを再生するメソッド
   Future<void> playPlaylist(List<String> trackIds) async {
     if (trackIds.isEmpty) return;
 
-    // 最初の曲を設定
-    final firstTrack = getTrackById(trackIds[0]);
-    if (firstTrack == null) return;
+    // プレイリストを設定
+    _currentPlaylistTracks = List.from(trackIds);
+    _currentPlaylistIndex = 0;
+
+    // 最初の曲を再生
+    final firstTrack = getTrackById(
+      _currentPlaylistTracks[_currentPlaylistIndex],
+    );
+    if (firstTrack == null) {
+      playNextTrack(); // 無効なトラックの場合は次へ
+      return;
+    }
 
     await setTrack(firstTrack);
-    play();
+    await play();
+  }
 
-    // 再生キューに残りの曲を追加
-    // この機能はオーディオプレーヤーの実装に依存します
+  // 次の曲を再生 (playNextTrack に変更)
+  Future<void> playNextTrack() async {
+    if (!hasPlaylist) return;
+
+    _currentPlaylistIndex++;
+
+    // プレイリストの最後まで到達した場合
+    if (_currentPlaylistIndex >= _currentPlaylistTracks.length) {
+      _currentPlaylistIndex = -1;
+      _currentPlaylistTracks = [];
+      await clear();
+      return;
+    }
+
+    // 次の曲を再生
+    final nextTrack = getTrackById(
+      _currentPlaylistTracks[_currentPlaylistIndex],
+    );
+    if (nextTrack == null) {
+      playNextTrack(); // 無効なトラックの場合は次へ
+      return;
+    }
+
+    await setTrack(nextTrack);
+    await play();
+  }
+
+  // 前の曲を再生
+  Future<void> playPreviousTrack() async {
+    if (!hasPlaylist || _currentPlaylistIndex <= 0) return;
+
+    _currentPlaylistIndex--;
+    final previousTrack = getTrackById(
+      _currentPlaylistTracks[_currentPlaylistIndex],
+    );
+    if (previousTrack == null) {
+      playNextTrack(); // 無効なトラックの場合は次へ
+      return;
+    }
+
+    await setTrack(previousTrack);
+    await play();
+  }
+
+  // プレイリストをクリア
+  void clearPlaylist() {
+    _currentPlaylistTracks = [];
+    _currentPlaylistIndex = -1;
   }
 
   @override
   void dispose() {
+    clearPlaylist();
     _audioAdapter.dispose();
     super.dispose();
   }

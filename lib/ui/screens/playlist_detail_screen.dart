@@ -57,12 +57,29 @@ class PlaylistDetailScreen extends StatelessWidget {
             ),
           ),
 
-          // 再生ボタン
+          // プレイリスト再生コントロール
           if (playlist.trackIds.isNotEmpty)
-            ElevatedButton.icon(
-              icon: const Icon(Icons.play_arrow),
-              label: const Text('プレイリストを再生'),
-              onPressed: () => _playPlaylist(context, playlist),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.skip_previous),
+                    onPressed: () => musicService.playPreviousTrack(),
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('プレイリストを再生'),
+                    onPressed:
+                        () => musicService.playPlaylist(playlist.trackIds),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.skip_next),
+                    onPressed: () => musicService.playNextTrack(), // _playNextTrack から playNextTrack に変更
+                  ),
+                ],
+              ),
             ),
 
           const Divider(),
@@ -77,11 +94,15 @@ class PlaylistDetailScreen extends StatelessWidget {
               },
               itemBuilder: (context, index) {
                 final trackId = playlist.trackIds[index];
-                print('Building track at index $index with ID: $trackId'); // デバッグ出力
+                print(
+                  'Building track at index $index with ID: $trackId',
+                ); // デバッグ出力
 
                 final track = musicService.getTrackById(trackId);
                 print('Track object: $track'); // より詳細なデバッグ出力
-                print('Available tracks: ${musicService.allTracks.length}'); // 利用可能なトラック数
+                print(
+                  'Available tracks: ${musicService.allTracks.length}',
+                ); // 利用可能なトラック数
 
                 if (track == null) {
                   print('Track is null for ID: $trackId'); // デバッグ出力
