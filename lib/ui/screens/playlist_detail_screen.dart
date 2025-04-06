@@ -61,24 +61,10 @@ class PlaylistDetailScreen extends StatelessWidget {
           if (playlist.trackIds.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.skip_previous),
-                    onPressed: () => musicService.playPreviousTrack(),
-                  ),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.play_arrow),
-                    label: const Text('プレイリストを再生'),
-                    onPressed:
-                        () => musicService.playPlaylist(playlist.trackIds),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.skip_next),
-                    onPressed: () => musicService.playNextTrack(), // _playNextTrack から playNextTrack に変更
-                  ),
-                ],
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('プレイリストを再生'),
+                onPressed: () => musicService.playPlaylist(playlist.trackIds),
               ),
             ),
 

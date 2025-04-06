@@ -12,73 +12,37 @@ class MusicPlayerScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final service = Provider.of<MusicPlayerService>(context);
+    final musicService = Provider.of<MusicPlayerService>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Music Player'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              );
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('ホーム')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // トラック情報表示
-            Expanded(
-              child: Center(
-                child:
-                    service.hasCurrentTrack
-                        ? _buildTrackInfo(service.currentTrack!)
-                        : const Text(
-                          '曲が選択されていません',
-                          style: TextStyle(fontSize: 18),
-                        ),
+            // 現在再生中の曲の情報
+            if (musicService.currentTrack != null) ...[
+              Icon(
+                Icons.music_note,
+                size: 72,
+                color: Theme.of(context).primaryColor,
               ),
-            ),
-
-            // プログレスバー
-            if (service.hasCurrentTrack) const ProgressBar(),
-
-            const SizedBox(height: 20),
-
-            // 再生コントロール
-            const MusicControls(),
-
-            const SizedBox(height: 20),
-
-            // 曲を選択するボタン
-            ElevatedButton(
-              onPressed: () async {
-                final result = await showDialog<MusicTrack>(
-                  context: context,
-                  builder: (context) => const MusicFilePickerDialog(),
-                );
-
-                if (result != null && context.mounted) {
-                  service.setTrack(result);
-                }
-              },
-              child: const Text('曲を選択'),
-            ),
-
-            if (service.hasCurrentTrack)
-              ElevatedButton(
-                onPressed: () {
-                  service.clear();
-                },
-                child: const Text('クリア'),
+              const SizedBox(height: 16),
+              Text(
+                musicService.currentTrack!.title,
+                style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
               ),
+              const SizedBox(height: 8),
+              Text(
+                musicService.currentTrack!.artist,
+                style: Theme.of(context).textTheme.titleMedium,
+                textAlign: TextAlign.center,
+              ),
+            ] else
+              const Center(child: Text('再生中の曲はありません')),
           ],
         ),
       ),

@@ -61,32 +61,34 @@ class MusicPlayerService with ChangeNotifier {
     _initStreams();
   }
 
+  // 再生位置のストリーム
+  Stream<Duration> get positionStream => _audioAdapter.positionStream;
+
   void _initStreams() {
-    // 再生状態の変化を監視
-    _audioAdapter.playingStream.listen((isPlaying) {
-      _updatePlayerState(isPlaying);
-    });
-
-    _audioAdapter.processingStateStream.listen((processingState) {
-      _updateProcessingState(processingState);
-
-      // 曲が完了したら次の曲を再生
-      if (processingState == ProcessingState.completed) {
-        playNextTrack();
-      }
-    });
-
-    // 再生位置の変化を監視
+    // 再生位置の監視
     _audioAdapter.positionStream.listen((position) {
       _position = position;
       notifyListeners();
     });
 
-    // 曲の長さの変化を監視
+    // 曲の長さの監視
     _audioAdapter.durationStream.listen((duration) {
       if (duration != null) {
         _duration = duration;
         notifyListeners();
+      }
+    });
+
+    // 再生状態の監視
+    _audioAdapter.playingStream.listen((isPlaying) {
+      _playerState = isPlaying ? PlayerState.playing : PlayerState.paused;
+      notifyListeners();
+    });
+
+    // 処理状態の監視
+    _audioAdapter.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) {
+        playNextTrack();
       }
     });
   }
@@ -134,7 +136,7 @@ class MusicPlayerService with ChangeNotifier {
   /// 停止する
   Future<void> stop() async {
     await _audioAdapter.stop();
-    await _audioAdapter.seek(Duration.zero);
+    await _audioAdapter.seekTo(Duration.zero); // seek を seekTo に変更
     notifyListeners();
   }
 
@@ -150,7 +152,9 @@ class MusicPlayerService with ChangeNotifier {
 
   /// 特定の位置にシークする
   Future<void> seekTo(Duration position) async {
-    await _audioAdapter.seek(position);
+    await _audioAdapter.seekTo(position);
+    _position = position;
+    notifyListeners();
   }
 
   /// 音量を設定する

@@ -3,13 +3,14 @@ import '../models/player_state.dart';
 
 /// 外部オーディオプレーヤーライブラリのラッパー
 class AudioPlayerAdapter {
-  final AudioPlayer _player = AudioPlayer();
+  final _player = AudioPlayer();
 
+  // ストリーム
+  Stream<Duration> get positionStream => _player.positionStream;
+  Stream<Duration?> get durationStream => _player.durationStream;
   Stream<bool> get playingStream => _player.playingStream;
   Stream<ProcessingState> get processingStateStream =>
       _player.processingStateStream;
-  Stream<Duration> get positionStream => _player.positionStream;
-  Stream<Duration?> get durationStream => _player.durationStream;
 
   Future<void> setUrl(String url) async {
     if (url.startsWith('assets/')) {
@@ -31,7 +32,8 @@ class AudioPlayerAdapter {
     await _player.stop();
   }
 
-  Future<void> seek(Duration position) async {
+  // シーク
+  Future<void> seekTo(Duration position) async {
     await _player.seek(position);
   }
 
@@ -53,7 +55,7 @@ class AudioPlayerAdapter {
     }
   }
 
-  Future<void> dispose() async {
-    await _player.dispose();
+  void dispose() {
+    _player.dispose();
   }
 }
