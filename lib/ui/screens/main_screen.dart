@@ -67,18 +67,25 @@ class _MainScreenState extends State<MainScreen> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      musicService.isPlaying
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_filled,
-                    ),
-                    onPressed: () {
-                      if (musicService.isPlaying) {
-                        musicService.pause();
-                      } else {
-                        musicService.play();
-                      }
+                  StreamBuilder<bool>(
+                    stream: musicService.playingStream,
+                    initialData: musicService.isPlaying,
+                    builder: (context, snapshot) {
+                      final isPlaying = snapshot.data ?? false;
+                      return IconButton(
+                        icon: Icon(
+                          isPlaying
+                              ? Icons.pause_circle_filled
+                              : Icons.play_circle_filled,
+                        ),
+                        onPressed: () {
+                          if (isPlaying) {
+                            musicService.pause();
+                          } else {
+                            musicService.play();
+                          }
+                        },
+                      );
                     },
                   ),
                 ],
@@ -153,22 +160,27 @@ class _MainScreenState extends State<MainScreen> {
                             : null,
                       ),
                       // 再生/一時停止ボタン
-                      IconButton(
-                        iconSize: 48,
-                        icon: Icon(
-                          musicService.isPlaying
-                              ? Icons.pause_circle_filled
-                              : Icons.play_circle_filled,
-                        ),
-                        onPressed: musicService.currentTrack == null
-                            ? null
-                            : () {
-                                if (musicService.isPlaying) {
-                                  musicService.pause();
-                                } else {
-                                  musicService.play();
-                                }
-                              },
+                      StreamBuilder<bool>(
+                        stream: musicService.playingStream,
+                        initialData: musicService.isPlaying,
+                        builder: (context, snapshot) {
+                          final isPlaying = snapshot.data ?? false;
+                          return IconButton(
+                            iconSize: 48,
+                            icon: Icon(
+                              isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
+                            ),
+                            onPressed: musicService.currentTrack == null
+                                ? null
+                                : () {
+                                    if (isPlaying) {
+                                      musicService.pause();
+                                    } else {
+                                      musicService.play();
+                                    }
+                                  },
+                          );
+                        },
                       ),
                       // 次の曲ボタン
                       IconButton(

@@ -64,6 +64,9 @@ class MusicPlayerService with ChangeNotifier {
   // 再生位置のストリーム
   Stream<Duration> get positionStream => _audioAdapter.positionStream;
 
+  // 再生状態のストリームを公開
+  Stream<bool> get playingStream => _audioAdapter.playingStream;
+
   void _initStreams() {
     // 再生位置の監視
     _audioAdapter.positionStream.listen((position) {
