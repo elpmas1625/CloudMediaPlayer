@@ -1,4 +1,9 @@
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import '../models/music_track.dart';
 import '../models/player_state.dart';
 
 /// 外部オーディオプレーヤーライブラリのラッパー
@@ -12,11 +17,31 @@ class AudioPlayerAdapter {
   Stream<ProcessingState> get processingStateStream =>
       _player.processingStateStream;
 
-  Future<void> setUrl(String url) async {
-    if (url.startsWith('assets/')) {
-      await _player.setAsset(url);
-    } else {
-      await _player.setUrl(url);
+  Future<void> setUrl(String assetPath, {required MusicTrack track}) async {
+    try {
+      // アセットファイルをローカルにコピー
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/${track.title}.mp3');
+
+      if (!await tempFile.exists()) {
+        final data = await rootBundle.load(assetPath);
+        await tempFile.writeAsBytes(data.buffer.asUint8List());
+      }
+
+      final audioSource = AudioSource.file(
+        tempFile.path,
+        tag: MediaItem(
+          id: track.id,
+          title: track.title,
+          artist: track.artist ?? 'Unknown Artist',
+          album: track.album ?? 'Unknown Album',
+        ),
+      );
+
+      await _player.setAudioSource(audioSource);
+    } catch (e) {
+      print('Error setting audio source: $e');
+      rethrow;
     }
   }
 

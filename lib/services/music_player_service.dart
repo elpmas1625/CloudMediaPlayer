@@ -117,7 +117,7 @@ class MusicPlayerService with ChangeNotifier {
   Future<void> setTrack(MusicTrack track) async {
     _currentTrack = track;
     _tracks[track.id] = track; // トラックをマップに追加
-    await _audioAdapter.setUrl(track.url);
+    await _audioAdapter.setUrl(track.url, track: track); // trackパラメータを追加
     _playerState = PlayerState.paused;
     notifyListeners();
   }

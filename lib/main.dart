@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'services/music_player_service.dart';
 import 'services/playlist_service.dart';
 import 'ui/screens/main_screen.dart';
 
 void main() async {
+  await JustAudioBackground.init(
+    androidNotificationChannelId:
+        'com.example.flutter_application.channel.audio',
+    androidNotificationChannelName: 'Audio playback',
+    androidNotificationOngoing: true,
+  );
+
   WidgetsFlutterBinding.ensureInitialized();
   final musicPlayerService = MusicPlayerService();
   await musicPlayerService.loadMusicFiles();
