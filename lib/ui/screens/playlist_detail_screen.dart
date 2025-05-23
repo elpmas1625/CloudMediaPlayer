@@ -61,10 +61,28 @@ class PlaylistDetailScreen extends StatelessWidget {
           if (playlist.trackIds.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('プレイリストを再生'),
-                onPressed: () => musicService.playPlaylist(playlist.trackIds),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('プレイリストを再生'),
+                    onPressed: () => musicService.playPlaylist(playlist.trackIds),
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.shuffle),
+                    label: const Text('シャッフル再生'),
+                    onPressed: () {
+                      if (playlist.trackIds.isEmpty) {
+                        return;
+                      }
+                      final List<String> shuffledTrackIds = List.from(playlist.trackIds);
+                      shuffledTrackIds.shuffle();
+                      print("Playing shuffled playlist: ${playlist.name} with IDs: $shuffledTrackIds"); // Optional: for debugging
+                      musicService.playPlaylist(shuffledTrackIds);
+                    },
+                  ),
+                ],
               ),
             ),
 

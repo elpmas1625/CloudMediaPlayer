@@ -233,10 +233,10 @@ class MusicPlayerService with ChangeNotifier {
     _currentPlaylistIndex = 0;
 
     // 最初の曲を再生
-    final firstTrack = getTrackById(
-      _currentPlaylistTracks[_currentPlaylistIndex],
-    );
+    final firstTrackId = _currentPlaylistTracks[_currentPlaylistIndex];
+    final firstTrack = getTrackById(firstTrackId);
     if (firstTrack == null) {
+      print('Error: Initial track ID not found in playlist: $firstTrackId');
       playNextTrack(); // 無効なトラックの場合は次へ
       return;
     }
@@ -251,25 +251,29 @@ class MusicPlayerService with ChangeNotifier {
 
     _currentPlaylistIndex++;
 
-    // プレイリストの最後まで到達した場合
-    if (_currentPlaylistIndex >= _currentPlaylistTracks.length) {
-      _currentPlaylistIndex = -1;
-      _currentPlaylistTracks = [];
-      await clear();
-      return;
-    }
+    while (true) {
+      // プレイリストの最後まで到達した場合
+      if (_currentPlaylistIndex >= _currentPlaylistTracks.length) {
+        _currentPlaylistIndex = -1;
+        _currentPlaylistTracks = [];
+        await clear();
+        return;
+      }
 
-    // 次の曲を再生
-    final nextTrack = getTrackById(
-      _currentPlaylistTracks[_currentPlaylistIndex],
-    );
-    if (nextTrack == null) {
-      playNextTrack(); // 無効なトラックの場合は次へ
-      return;
-    }
+      // 次の曲を再生
+      final nextTrackId = _currentPlaylistTracks[_currentPlaylistIndex];
+      final nextTrack = getTrackById(nextTrackId);
 
-    await setTrack(nextTrack);
-    await play();
+      if (nextTrack != null) {
+        await setTrack(nextTrack);
+        await play();
+        return; // 曲が見つかり再生を開始したのでループを抜ける
+      } else {
+        // 無効なトラックの場合はログを出力して次へ
+        print('Error: Track ID not found: $nextTrackId');
+        _currentPlaylistIndex++;
+      }
+    }
   }
 
   // 前の曲を再生
@@ -277,10 +281,10 @@ class MusicPlayerService with ChangeNotifier {
     if (!hasPlaylist || _currentPlaylistIndex <= 0) return;
 
     _currentPlaylistIndex--;
-    final previousTrack = getTrackById(
-      _currentPlaylistTracks[_currentPlaylistIndex],
-    );
+    final previousTrackId = _currentPlaylistTracks[_currentPlaylistIndex];
+    final previousTrack = getTrackById(previousTrackId);
     if (previousTrack == null) {
+      print('Error: Previous track ID not found: $previousTrackId');
       playNextTrack(); // 無効なトラックの場合は次へ
       return;
     }
